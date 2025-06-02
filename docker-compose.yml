@@ -3,15 +3,9 @@ version: '3'
 services:
   backend:
     build: .
-    command: gunicorn notes_project.wsgi:application --bind 0.0.0.0:8000
-    volumes:
-      - .:/app
-      - static_volume:/app/static
     ports:
       - "8000:8000"
     environment:
-      SECRET_KEY: django-insecure-1234567890abcdef
-      DEBUG: 'True'
       DB_NAME: postgres
       DB_USER: postgres
       DB_PASSWORD: postgres
@@ -23,12 +17,12 @@ services:
 
   db:
     image: postgres:latest
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
 
   redis:
     image: redis:latest
@@ -38,8 +32,6 @@ services:
   celery:
     build: .
     command: celery -A notes_project worker --loglevel=info
-    volumes:
-      - .:/app
     depends_on:
       - backend
       - redis
@@ -49,5 +41,15 @@ services:
     ports:
       - "3001:3000"
 
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
 volumes:
   static_volume:
+
+
